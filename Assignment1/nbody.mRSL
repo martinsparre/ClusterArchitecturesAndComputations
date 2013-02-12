@@ -1,0 +1,23 @@
+::VGRID::
+eScience/Courses/ClusterComputing
+
+::EXECUTE::
+python nbody.py
+
+::INPUTFILES::
+nbody.py
+nbodyphysics.py
+
+::CPUTIME::
+600
+
+::MEMORY::
+1024
+
+::RUNTIMEENVIRONMENT::
+NUMPY-1.X-1
+PYTHON-2.X-1
+
+::RESOURCE::
+smithers01.esci.nbi.dk.0_*
+smithers02.esci.nbi.dk.0_*
