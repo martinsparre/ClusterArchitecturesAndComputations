@@ -18,19 +18,67 @@ import numpy
 G = 1.0
 
 
-def calc_force(a, b, dt):
+
+class Galaxy:
+    def __init__(self, x_max, y_max, z_max,n,max_mass=40):
+        self.x_max = x_max
+        self.y_max = y_max
+        self.z_max = z_max
+        self.n = n
+        self.max_mass = max_mass 
+        self.m = 1.0 * numpy.array([ numpy.random.randint(1, self.max_mass) / (4 * numpy.pi ** 2) for i in xrange(n)])
+        self.x = 1.0 * numpy.array([ numpy.random.randint(-x_max, x_max) for _ in xrange(n)])
+        self.y = 1.0 * numpy.array([ numpy.random.randint(-y_max, y_max) for _ in xrange(n)])
+        self.z = 1.0 * numpy.array([ numpy.random.randint(-z_max, z_max) for _ in xrange(n)])
+        self.vx = self.vy = self.vz = 1.0 * numpy.zeros(n)
+
+
+def calc_force(Gal, dt):
     """Calculate forces between bodies
     F = ((G m_a m_b)/r^2)/((x_b-x_a)/r)
-    """
+   """
+    
+    dx = numpy.zeros((len(Gal.x),len(Gal.x)))
+    dy = numpy.zeros((len(Gal.y),len(Gal.y)))
+    dz = numpy.zeros((len(Gal.z),len(Gal.z)))    
 
-    r = ((b['x'] - a['x']) ** 2 + (b['y'] - a['y']) ** 2 + (b['z']
-         - a['z']) ** 2) ** 0.5
-    a['vx'] += G * a['m'] * b['m'] / r ** 2 * ((b['x'] - a['x']) / r) \
-        / a['m'] * dt
-    a['vy'] += G * a['m'] * b['m'] / r ** 2 * ((b['y'] - a['y']) / r) \
-        / a['m'] * dt
-    a['vz'] += G * a['m'] * b['m'] / r ** 2 * ((b['z'] - a['z']) / r) \
-        / a['m'] * dt
+
+    
+    for i in range(len(Gal.x)):
+        dx[i,] = Gal.x[i]-Gal.x
+        dy[i,] = Gal.y[i]-Gal.y
+        dz[i,] = Gal.z[i]-Gal.z#maybe create an array that has Gal.x in all its rows...
+        
+        
+    print 'dx[i,j] = x[i] - x[j]'
+    print Gal.x[12]-Gal.x[1], dx[12,1], dx[1,12]
+    
+    r2_ij = dx**2+dy**2+dz**2+0.0005**2
+    r_ij = numpy.sqrt(r2_ij)
+    m2_ij = numpy.outer(Gal.m,Gal.m)
+
+    print m2_ij.shape
+    print r2_ij.shape
+    print r_ij.shape    
+    Fij = G*m2_ij / r2_ij / r_ij * dt
+    
+    tmp = numpy.matrix(Fij)
+    w=tmp * dx
+    print w.shape
+
+    dvx = numpy.zeros((len(Gal.x),len(Gal.x)))
+    dvy = numpy.zeros((len(Gal.y),len(Gal.y)))
+    dvz = numpy.zeros((len(Gal.z),len(Gal.z)))    
+    
+    for i in range(len(Gal.x)):
+        print tmp.shape, dx[i,].shape
+        dvx[i,] = numpy.dot(tmp , dx[i,])/ Gal.m
+        dvy[i,] = numpy.dot(tmp , dy[i,])/ Gal.m
+        dvz[i,] = numpy.dot(tmp , dz[i,])/ Gal.m
+        
+    
+    
+    return dx,dvx
 
 
 def move(galaxy, dt):
