@@ -37,49 +37,31 @@ def calc_force(Gal, dt):
     """Calculate forces between bodies
     F = ((G m_a m_b)/r^2)/((x_b-x_a)/r)
    """
-    
-    dx = numpy.zeros((len(Gal.x),len(Gal.x)))
-    dy = numpy.zeros((len(Gal.y),len(Gal.y)))
-    dz = numpy.zeros((len(Gal.z),len(Gal.z)))    
+    NStars = len(Gal.x)
 
-
+    #Convention: dx[i,j] = x[i] - x[j]
+    dx = numpy.repeat(Gal.x,NStars) - numpy.tile(Gal.x,NStars)
+    dy = numpy.repeat(Gal.y,NStars) - numpy.tile(Gal.y,NStars) 
+    dz = numpy.repeat(Gal.z,NStars) - numpy.tile(Gal.z,NStars)     
+    dx.shape = (NStars,NStars)
+    dy.shape = (NStars,NStars)
+    dz.shape = (NStars,NStars)
     
-    for i in range(len(Gal.x)):
-        dx[i,] = Gal.x[i]-Gal.x
-        dy[i,] = Gal.y[i]-Gal.y
-        dz[i,] = Gal.z[i]-Gal.z#maybe create an array that has Gal.x in all its rows...
-        
-        
-    print 'dx[i,j] = x[i] - x[j]'
-    print Gal.x[12]-Gal.x[1], dx[12,1], dx[1,12]
-    
-    r2_ij = dx**2+dy**2+dz**2+0.0005**2
+    #r2_ij, r_ij and m2_ij are calculated:
+    r2_ij = dx**2+dy**2+dz**2+0.0001**2
     r_ij = numpy.sqrt(r2_ij)
     m2_ij = numpy.outer(Gal.m,Gal.m)
 
-    print m2_ij.shape
-    print r2_ij.shape
-    print r_ij.shape    
-    Fij = G*m2_ij / r2_ij / r_ij * dt
     
-    tmp = numpy.matrix(Fij)
-    w=tmp * dx
-    print w.shape
-
-    dvx = numpy.zeros((len(Gal.x),len(Gal.x)))
-    dvy = numpy.zeros((len(Gal.y),len(Gal.y)))
-    dvz = numpy.zeros((len(Gal.z),len(Gal.z)))    
+    #Fij is used to compute dvx, dvy and dvz in an efficient way:
+    F_ij = G*m2_ij / r2_ij / r_ij * dt
     
-    for i in range(len(Gal.x)):
-        print tmp.shape, dx[i,].shape
-        dvx[i,] = numpy.dot(tmp , dx[i,])/ Gal.m
-        dvy[i,] = numpy.dot(tmp , dy[i,])/ Gal.m
-        dvz[i,] = numpy.dot(tmp , dz[i,])/ Gal.m
-        
+    dvx = numpy.sum(F_ij * dx,axis=1) / Gal.m
+    dvy = numpy.sum(F_ij * dy,axis=1) / Gal.m
+    dvz = numpy.sum(F_ij * dz,axis=1) / Gal.m    
     
-    
-    return dx,dvx
-
+    return None
+ 
 
 def move(galaxy, dt):
     """Move the bodies
@@ -121,3 +103,10 @@ def random_galaxy(
         } for _ in xrange(n)]
 
 
+
+        
+        
+if __name__ == '__main__':
+    g = Galaxy(10,10,10,5)
+    a = calc_force(g,1)
+        
