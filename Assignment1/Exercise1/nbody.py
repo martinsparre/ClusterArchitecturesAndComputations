@@ -4,8 +4,9 @@
 """Non-interactive command line front end to NBody implementation"""
 
 import time
-from nbodyphysics import move, random_galaxy
-
+#from nbodyphysics import move, random_galaxy
+import nbodyphysics
+import numpy
 
 def nbody_benchmark(bodies_list, time_step):
     """Run benchmark simulation without visualization"""
@@ -16,11 +17,12 @@ def nbody_benchmark(bodies_list, time_step):
     dt = 1.0  # One year timesteps for better accuracy
 
     for bodies in bodies_list:
-        galaxy = random_galaxy(x_max, y_max, z_max, bodies)
+        galaxy = nbodyphysics.Galaxy(x_max, y_max, z_max, bodies)
 
         start = time.time()
         for _ in range(time_step):
-            move(galaxy, dt)
+            nbodyphysics.move(galaxy, dt)
+
         stop = time.time()
 
         print 'Simulated ' + str(bodies) + ' bodies for ' \
@@ -29,4 +31,6 @@ def nbody_benchmark(bodies_list, time_step):
 
 
 if __name__ == '__main__':
-    nbody_benchmark([10, 100, 1000], 10)
+    #nbody_benchmark([10, 100,1000], 10)
+    nbody_benchmark(list(numpy.int32(numpy.logspace(1,3.3011,16))), 10)  
+    
