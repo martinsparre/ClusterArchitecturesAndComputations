@@ -17,7 +17,7 @@ import numpy, time
 
 G = 1.0
 DebugMode = False
-Timing = False
+Timing = True
 
 class Galaxy:
     def __init__(self, x_max, y_max, z_max,n,max_mass=40):
@@ -71,10 +71,12 @@ def calc_force(Gal):
     dx.shape = (NStars,NStars)
     dy.shape = (NStars,NStars)
     dz.shape = (NStars,NStars)
+
     if Timing:
         stop = time.time()    
-        print 'Time for dx computation', stop-start
-    
+        print 'Time for dx computation', stop-start        
+        
+        
     if DebugMode==True:
         print 'check that dx[i,j] = x[i] - x[j]'
         print dx[0,1],Gal.x[0]-Gal.x[1]
