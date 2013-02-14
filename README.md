@@ -8,6 +8,5 @@ To do
 ===================================
 Next steps:
 Make a GPU programs that can:
-- Take sqrt of a matrix
-- multiply 2 matrices
+- write a function to do some work in the force_calc code.
 
