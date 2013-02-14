@@ -8,5 +8,5 @@ To do
 ===================================
 Next steps:
 Make a GPU programs that can:
-- write a function to do some work in the force_calc code.
-
+- One calculation has been ported to GPU. Think about the rest...
+- is it possible to pass the mass vector instead of the m2_ij matrix?

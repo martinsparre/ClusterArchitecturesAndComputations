@@ -17,7 +17,7 @@ import numpy, time
 
 G = 1.0
 DebugMode = False
-Timing = False
+Timing = True
 
 class Galaxy:
     def __init__(self, x_max, y_max, z_max,n,max_mass=40):
@@ -55,7 +55,7 @@ class Galaxy:
         
         
         
-def calc_force(Gal):
+def calc_force(Gal,dt):
     """Calculate forces between bodies
     F = ((G m_a m_b)/r^2)/((x_b-x_a)/r)
    """
@@ -157,6 +157,6 @@ def move(galaxy, dt):
         
         
 if __name__ == '__main__':
-    g = Galaxy(10,10,10,5000)
+    g = Galaxy(32,32,32,4096)
     a = calc_force(g,1.0)
         

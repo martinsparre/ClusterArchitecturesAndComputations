@@ -11,7 +11,8 @@ All the work is done in the calc_force, move and random_galaxy functions.
 To vectorize the code these are the functions to transform.
 """
 import numpy, time
-
+import GPU_functions
+import pyopencl as cl
 # By using the solar-mass as the mass unit and years as the standard time-unit
 # the gravitational constant becomes 1
 
@@ -50,16 +51,25 @@ class Galaxy:
             self.z = 1.0 * numpy.array([ numpy.random.randint(-z_max, z_max) for _ in xrange(n)])
             self.vx = self.vy = self.vz = 1.0 * numpy.zeros(n)
 
+        self.x = numpy.float32(self.x)
+        self.y = numpy.float32(self.y)
+        self.z = numpy.float32(self.z)        
+        self.vx = numpy.float32(self.vx)        
+        self.vy = numpy.float32(self.vy)        
+        self.vz = numpy.float32(self.vz)
+        self.m = numpy.float32(self.m)
+        self.n = len(self.x)
         
-
         
         
-        
-def calc_force(Gal):
+def calc_force(Gal,dt):
     """Calculate forces between bodies
     F = ((G m_a m_b)/r^2)/((x_b-x_a)/r)
    """
     NStars = len(Gal.x)
+    
+    ctx = cl.create_some_context(0)#use device 0, the GPU
+    queue = cl.CommandQueue(ctx)    
 
     if Timing:
         start = time.time()
@@ -71,12 +81,10 @@ def calc_force(Gal):
     dx.shape = (NStars,NStars)
     dy.shape = (NStars,NStars)
     dz.shape = (NStars,NStars)
-
     if Timing:
         stop = time.time()    
-        print 'Time for dx computation', stop-start        
-        
-        
+        print 'Time for dx computation', stop-start
+    
     if DebugMode==True:
         print 'check that dx[i,j] = x[i] - x[j]'
         print dx[0,1],Gal.x[0]-Gal.x[1]
@@ -103,7 +111,12 @@ def calc_force(Gal):
     #Fij is used to compute dvx, dvy and dvz in an efficient way:
     if Timing:
         start = time.time()    
-    F_ij = G*m2_ij / r2_ij / r_ij
+        
+
+    F_ij = GPU_functions.CalcF(ctx,queue,m2_ij,r2_ij)
+#    F_ij = G*m2_ij / r2_ij / r_ij
+    #input to gpu: m2ij,r2ij. return: Fij
+
 
     if Timing:
         stop = time.time()    
@@ -159,6 +172,6 @@ def move(galaxy, dt):
         
         
 if __name__ == '__main__':
-    g = Galaxy(10,10,10,5000)
+    g = Galaxy(32,32,32,4096)
     a = calc_force(g,1.0)
         
