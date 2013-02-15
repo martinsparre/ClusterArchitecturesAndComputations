@@ -2,6 +2,72 @@ import numpy as np
 import pyopencl as cl
 import pyopencl.array as cl_array
 
+
+
+
+
+
+
+
+
+
+
+
+
+def Difference(ctx,queue,vector):
+    Length = len(vector)
+
+    gpu_vector = cl_array.to_device(queue, vector)
+    gpu_result = cl_array.zeros(queue, (Length,Length), np.float32)    
+    kernel = get_kernel_Difference(queue)
+    event = kernel.difference(queue, 
+                            gpu_result.shape,
+                            (16,16),
+                            gpu_vector.data,
+                            gpu_result.data)
+
+    event.wait()    
+    result = gpu_result.get()
+    queue.finish()
+    return result
+
+def get_kernel_Difference(queue):
+    """
+    This function generates the kernel source from the template with constants replaces by actual values
+    """
+
+    # Replace kernel source template constants with actual constants
+    kernel_src = """
+           #define DX(y,x) dx[(y*get_global_size(0))+x]
+
+           __kernel void difference(__global float *vector,__global float *dx) {
+               int x = get_global_id(0);
+               int y = get_global_id(1);
+
+               DX(y,x) = vector[y] - vector[x];
+           }
+    """
+    
+    # Check if we are using NVIDIA GPUs
+    if "NVIDIA" in queue.device.vendor:
+        options = "-cl-mad-enable -cl-fast-relaxed-math"
+    else:
+        options = ""
+
+
+    print "------------------------- Kernel src --------------------------"
+    print kernel_src
+    print "---------------------------------------------------------------"
+    print "compile options: %s" % (options)
+    print "---------------------------------------------------------------"
+                                     
+    kernel = cl.Program(queue.context, kernel_src).build(options=options)
+    
+    return kernel
+
+
+
+
 def OuterProduct(ctx,queue,vector):
     Length = len(vector)
 

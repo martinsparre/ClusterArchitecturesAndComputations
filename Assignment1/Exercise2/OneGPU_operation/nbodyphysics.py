@@ -17,7 +17,7 @@ import pyopencl as cl
 # the gravitational constant becomes 1
 
 G = 1.0
-DebugMode = False
+DebugMode = True
 Timing = True
 
 class Galaxy:
@@ -75,81 +75,44 @@ def calc_force(Gal,dt):
         start = time.time()
 
     #Convention: dx[i,j] = x[i] - x[j]
-    dx = GPU_functions.Difference(ctx,queue, Gal.x)
-    dy = GPU_functions.Difference(ctx,queue, Gal.y)
-    dz = GPU_functions.Difference(ctx,queue, Gal.z)
 
-    if Timing:
-        stop = time.time()    
-        print 'Time for dx computation', stop-start
-    
-    if DebugMode==True:
-        print 'check that dx[i,j] = x[i] - x[j]'
-        print dx[0,1],Gal.x[0]-Gal.x[1]
-        print dy[0,1],Gal.y[0]-Gal.y[1]
-        print dz[0,1],Gal.z[0]-Gal.z[1]
-        print '----End check'
-    
-
-    #r2_ij, r_ij and m2_ij are calculated:
-    r2_ij = dx**2+dy**2+dz**2+0.0001**2
-#    r_ij = numpy.sqrt(r2_ij)
-    if Timing:
-        start = time.time()        
-        
-    m2_ij = GPU_functions.OuterProduct(ctx,queue, Gal.m)
-
-    if Timing:
-        stop = time.time()    
-        print 'Time for m2_ij computation', stop-start
-    
-    if DebugMode==True:
-        print 'check that r_ij[i,j] is correct'
-        print r_ij[0,1],numpy.sqrt((Gal.x[0]-Gal.x[1])**2+(Gal.y[0]-Gal.y[1])**2+(Gal.z[0]-Gal.z[1])**2)
-        print '----End check'
-    
-    #Fij is used to compute dvx, dvy and dvz in an efficient way:
-    if Timing:
-        start = time.time()    
         
 
-    F_ij = GPU_functions.CalcF(ctx,queue,m2_ij,r2_ij)#implement G...
-
-
-
+    dvx = GPU_functions.CalcF(ctx,queue,Gal.x,Gal.y,Gal.z,Gal.m,'X',1.0,1.0)#implement G...
+    dvy = GPU_functions.CalcF(ctx,queue,Gal.x,Gal.y,Gal.z,Gal.m,'Y',1.0,1.0)#implement G...
+    dvz = GPU_functions.CalcF(ctx,queue,Gal.x,Gal.y,Gal.z,Gal.m,'Z',1.0,1.0)#implement G...
+#
     if Timing:
         stop = time.time()    
         print 'Time for F_ij computation', stop-start    
-    
-    
-    if DebugMode==True:
-        print 'check that F_ij[i,j] is correct'
-        print F_ij[0,1], G * Gal.m[0] * Gal.m[1] / numpy.sqrt((Gal.x[0]-Gal.x[1])**2+(Gal.y[0]-Gal.y[1])**2+(Gal.z[0]-Gal.z[1])**2)**(3)
-        print '----End check'
+#    
+#    
+#    if DebugMode==True:
+#        print 'check that F_ij[i,j] is correct'
+#        print F_ij[0,1], G * Gal.m[0] * Gal.m[1] / numpy.sqrt((Gal.x[0]-Gal.x[1])**2+(Gal.y[0]-Gal.y[1])**2+(Gal.z[0]-Gal.z[1])**2)**(3)
+#        print '----End check'
+#
+#        
+#    if Timing:
+#        start = time.time()        
+#        
+    Gal.dvx = numpy.sum(dvx,axis=0) / Gal.m
+    Gal.dvy = numpy.sum(dvy,axis=0) / Gal.m
+    Gal.dvz = numpy.sum(dvz,axis=0) / Gal.m    
 
-        
-    if Timing:
-        start = time.time()        
-        
-    dvx = numpy.sum(F_ij * dx,axis=0) / Gal.m
-    dvy = numpy.sum(F_ij * dy,axis=0) / Gal.m
-    dvz = numpy.sum(F_ij * dz,axis=0) / Gal.m    
-    Gal.dvx = dvx
-    Gal.dvy = dvy
-    Gal.dvz = dvz
-
-    if Timing:
-        stop = time.time()    
-    
-        print 'Time for final sum', stop-start    
-    
+#
+#    if Timing:
+#        stop = time.time()    
+#    
+#        print 'Time for final sum', stop-start    
+#    
     if DebugMode==True:
         print 'check that dvx,dvy,dvz is correct'
         print dvy,dvz
         print dvx[0], G*13.0/10.0**2 
         
         print '----End check'
-
+#
         print 'Check that the force is attracting'
         print Gal.x, Gal.y, Gal.z
         print Gal.dvx, Gal.dvy, Gal.dvz
