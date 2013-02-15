@@ -92,16 +92,18 @@ def calc_force(Gal,dt):
         print dz[0,1],Gal.z[0]-Gal.z[1]
         print '----End check'
     
-    if Timing:
-        start = time.time()        
+
     #r2_ij, r_ij and m2_ij are calculated:
     r2_ij = dx**2+dy**2+dz**2+0.0001**2
-    r_ij = numpy.sqrt(r2_ij)
-    m2_ij = numpy.outer(Gal.m,Gal.m)
-    
+#    r_ij = numpy.sqrt(r2_ij)
+    if Timing:
+        start = time.time()        
+        
+    m2_ij = GPU_functions.OuterProduct(ctx,queue, Gal.m)
+
     if Timing:
         stop = time.time()    
-        print 'Time for r_ij computation', stop-start
+        print 'Time for m2_ij computation', stop-start
     
     if DebugMode==True:
         print 'check that r_ij[i,j] is correct'
@@ -113,9 +115,8 @@ def calc_force(Gal,dt):
         start = time.time()    
         
 
-    F_ij = GPU_functions.CalcF(ctx,queue,m2_ij,r2_ij)
-#    F_ij = G*m2_ij / r2_ij / r_ij
-    #input to gpu: m2ij,r2ij. return: Fij
+    F_ij = GPU_functions.CalcF(ctx,queue,m2_ij,r2_ij)#implement G...
+
 
 
     if Timing:
@@ -172,6 +173,6 @@ def move(galaxy, dt):
         
         
 if __name__ == '__main__':
-    g = Galaxy(32,32,32,4096)
+    g = Galaxy(32,32,32,1024*4)
     a = calc_force(g,1.0)
         

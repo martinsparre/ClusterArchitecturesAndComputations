@@ -1,6 +1,60 @@
 import numpy as np
 import pyopencl as cl
 import pyopencl.array as cl_array
+
+def OuterProduct(ctx,queue,vector):
+    Length = len(vector)
+
+    gpu_vector = cl_array.to_device(queue, vector)
+    gpu_result = cl_array.zeros(queue, (Length,Length), np.float32)    
+    kernel = get_kernel_OuterProduct(queue)
+    event = kernel.outer(queue, 
+                            gpu_result.shape,
+                            (16,16),
+                            gpu_vector.data,
+                            gpu_result.data)
+
+    event.wait()    
+    result = gpu_result.get()
+    queue.finish()
+    return result
+
+def get_kernel_OuterProduct(queue):
+    """
+    This function generates the kernel source from the template with constants replaces by actual values
+    """
+
+    # Replace kernel source template constants with actual constants
+    kernel_src = """
+           #define OUTER(y,x) OuterProduct[(y*get_global_size(0))+x]
+
+           __kernel void outer(__global float *vector,__global float *OuterProduct) {
+               int x = get_global_id(0);
+               int y = get_global_id(1);
+
+               OUTER(y,x) = vector[x] * vector[y];
+           }
+    """
+    
+    # Check if we are using NVIDIA GPUs
+    if "NVIDIA" in queue.device.vendor:
+        options = "-cl-mad-enable -cl-fast-relaxed-math"
+    else:
+        options = ""
+
+
+    print "------------------------- Kernel src --------------------------"
+    print kernel_src
+    print "---------------------------------------------------------------"
+    print "compile options: %s" % (options)
+    print "---------------------------------------------------------------"
+                                     
+    kernel = cl.Program(queue.context, kernel_src).build(options=options)
+    
+    return kernel
+
+
+
    
 def get_kernel(ctx, xdim,GRAV_CONST=1.0):
     """
