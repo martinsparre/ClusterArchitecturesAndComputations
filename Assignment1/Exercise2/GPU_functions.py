@@ -4,16 +4,6 @@ import pyopencl.array as cl_array
 
 
 
-
-
-
-
-
-
-
-
-
-
 def Difference(ctx,queue,vector):
     Length = len(vector)
 
@@ -178,7 +168,7 @@ def CalcF(ctx,queue,m2,r2):
     grid_shape = (ydim, xdim)
     
     # Get group shape based on the matrix dimensions and the actual hardware
-    group_shape = (32,16)
+    group_shape = (16,16)
     
 
     event = kernel.CalcF(queue, 

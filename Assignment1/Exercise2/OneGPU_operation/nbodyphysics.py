@@ -17,7 +17,7 @@ import pyopencl as cl
 # the gravitational constant becomes 1
 
 G = 1.0
-DebugMode = True
+DebugMode = False
 Timing = True
 
 class Galaxy:
@@ -66,7 +66,6 @@ def calc_force(Gal,dt):
     """Calculate forces between bodies
     F = ((G m_a m_b)/r^2)/((x_b-x_a)/r)
    """
-    NStars = len(Gal.x)
     
     ctx = cl.create_some_context(0)#use device 0, the GPU
     queue = cl.CommandQueue(ctx)    
@@ -76,48 +75,23 @@ def calc_force(Gal,dt):
 
     #Convention: dx[i,j] = x[i] - x[j]
 
-        
-
-    dvx = GPU_functions.CalcF(ctx,queue,Gal.x,Gal.y,Gal.z,Gal.m,'X',1.0,1.0)#implement G...
-    dvy = GPU_functions.CalcF(ctx,queue,Gal.x,Gal.y,Gal.z,Gal.m,'Y',1.0,1.0)#implement G...
-    dvz = GPU_functions.CalcF(ctx,queue,Gal.x,Gal.y,Gal.z,Gal.m,'Z',1.0,1.0)#implement G...
-#
+    Gal.dvx,Gal.dvy,Gal.dvz = GPU_functions.CalcF(ctx,queue,Gal.x,Gal.y,Gal.z,Gal.m,1.0,1.0)
     if Timing:
         stop = time.time()    
         print 'Time for F_ij computation', stop-start    
-#    
-#    
-#    if DebugMode==True:
-#        print 'check that F_ij[i,j] is correct'
-#        print F_ij[0,1], G * Gal.m[0] * Gal.m[1] / numpy.sqrt((Gal.x[0]-Gal.x[1])**2+(Gal.y[0]-Gal.y[1])**2+(Gal.z[0]-Gal.z[1])**2)**(3)
-#        print '----End check'
-#
-#        
-#    if Timing:
-#        start = time.time()        
-#        
-    Gal.dvx = numpy.sum(dvx,axis=0) / Gal.m
-    Gal.dvy = numpy.sum(dvy,axis=0) / Gal.m
-    Gal.dvz = numpy.sum(dvz,axis=0) / Gal.m    
 
-#
-#    if Timing:
-#        stop = time.time()    
-#    
-#        print 'Time for final sum', stop-start    
 #    
     if DebugMode==True:
-        print 'check that dvx,dvy,dvz is correct'
-        print dvy,dvz
-        print dvx[0], G*13.0/10.0**2 
-        
-        print '----End check'
 #
         print 'Check that the force is attracting'
         print Gal.x, Gal.y, Gal.z
         print Gal.dvx, Gal.dvy, Gal.dvz
         print '----End check'        
 
+    print 'Check that the force is attracting'
+    print Gal.x[120]
+    print Gal.dvx[120]
+    print '----End check'  
 
 
 def move(galaxy, dt):
@@ -134,6 +108,6 @@ def move(galaxy, dt):
         
         
 if __name__ == '__main__':
-    g = Galaxy(32,32,32,32)
+    g = Galaxy(32,32,32,1000)
     a = calc_force(g,1.0)
         

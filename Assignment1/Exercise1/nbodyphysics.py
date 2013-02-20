@@ -17,7 +17,7 @@ import numpy, time
 
 G = 1.0
 DebugMode = False
-Timing = True
+Timing = False
 
 class Galaxy:
     def __init__(self, x_max, y_max, z_max,n,max_mass=40):
@@ -55,7 +55,7 @@ class Galaxy:
         
         
         
-def calc_force(Gal,dt):
+def calc_force(Gal):
     """Calculate forces between bodies
     F = ((G m_a m_b)/r^2)/((x_b-x_a)/r)
    """

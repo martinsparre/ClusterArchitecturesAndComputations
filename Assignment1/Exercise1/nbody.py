@@ -31,6 +31,6 @@ def nbody_benchmark(bodies_list, time_step):
 
 
 if __name__ == '__main__':
-    #nbody_benchmark([10, 100,1000], 10)
-    nbody_benchmark(list(numpy.int32(numpy.logspace(1,3.3011,16))), 10)  
+    nbody_benchmark([10, 100,1000], 10)
+    #nbody_benchmark(list(numpy.int32(numpy.logspace(1,3.3011,16))), 10)  
     
